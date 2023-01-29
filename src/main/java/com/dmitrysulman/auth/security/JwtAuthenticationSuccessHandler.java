@@ -1,6 +1,7 @@
 package com.dmitrysulman.auth.security;
 
 import com.dmitrysulman.auth.dto.JwtDto;
+import com.dmitrysulman.auth.model.User;
 import com.dmitrysulman.auth.service.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +34,9 @@ public class JwtAuthenticationSuccessHandler implements AuthenticationSuccessHan
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-//        authentication.getPrincipal()
-        String token = jwtService.generateToken("user");
+        User user = ((UserDetailsImpl) authentication.getPrincipal()).getUser();
+        String username = user.getUsername();
+        String token = jwtService.generateToken(username);
         JwtDto jwtDto = new JwtDto(token);
         String jsonResponse = objectMapper.writeValueAsString(jwtDto);
         response.getWriter().print(jsonResponse);
