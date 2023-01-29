@@ -28,7 +28,7 @@ public class JwtService {
     public String generateToken(String username) {
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(username)
-                .issuer("dmitrysulman")
+                .issuer("auth")
                 .expirationTime(Date.from(ZonedDateTime.now().plusMinutes(60).toInstant()))
                 .build();
         JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).build();
@@ -37,18 +37,14 @@ public class JwtService {
         JWKMatcher jwkMatcher = new JWKMatcher.Builder().build();
         JWKSelector jwkSelector = new JWKSelector(jwkMatcher);
         try {
-            JWSSigner jwsSigner = new RSASSASigner((RSAKey) jwkSource.get(jwkSelector, null).get(0));
             RSAKey rsaKey = (RSAKey) jwkSource.get(jwkSelector, null).get(0);
-
-            System.out.println(rsaKey);
-            System.out.println(rsaKey.toRSAPublicKey());
-
+            JWSSigner jwsSigner = new RSASSASigner(rsaKey);
             signedJWT.sign(jwsSigner);
+
             return signedJWT.serialize();
         } catch (JOSEException e) {
             throw new RuntimeException(e);
         }
-
     }
 
 

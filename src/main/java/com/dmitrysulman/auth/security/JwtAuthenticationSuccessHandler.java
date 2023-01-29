@@ -1,6 +1,8 @@
 package com.dmitrysulman.auth.security;
 
+import com.dmitrysulman.auth.dto.JwtDto;
 import com.dmitrysulman.auth.service.JwtService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -16,10 +18,12 @@ import java.io.IOException;
 public class JwtAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtService jwtService;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public JwtAuthenticationSuccessHandler(JwtService jwtService) {
+    public JwtAuthenticationSuccessHandler(JwtService jwtService, ObjectMapper objectMapper) {
         this.jwtService = jwtService;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -30,6 +34,9 @@ public class JwtAuthenticationSuccessHandler implements AuthenticationSuccessHan
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
 //        authentication.getPrincipal()
-        response.getWriter().print(jwtService.generateToken("user"));
+        String token = jwtService.generateToken("user");
+        JwtDto jwtDto = new JwtDto(token);
+        String jsonResponse = objectMapper.writeValueAsString(jwtDto);
+        response.getWriter().print(jsonResponse);
     }
 }
