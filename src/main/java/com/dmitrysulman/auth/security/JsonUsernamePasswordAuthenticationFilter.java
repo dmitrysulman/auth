@@ -1,8 +1,8 @@
 package com.dmitrysulman.auth.security;
 
-import com.dmitrysulman.auth.dto.CredentialsDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
@@ -12,55 +12,28 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
-import java.io.IOException;
 
 public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
-    private final ObjectMapper objectMapper;
-    private String username;
-    private String password;
+    private final JsonAuthenticationConverter jsonAuthenticationConverter;
 
-    public JsonUsernamePasswordAuthenticationFilter(AuthenticationSuccessHandler successHandler,
+    public JsonUsernamePasswordAuthenticationFilter(String loginUrl,
+                                                    AuthenticationSuccessHandler successHandler,
                                                     AuthenticationFailureHandler failureHandler,
-                                                    AuthenticationManager authenticationManager,
                                                     ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-        setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/auth", "POST"));
+        jsonAuthenticationConverter = new JsonAuthenticationConverter(objectMapper);
+        setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher(loginUrl, "POST"));
         setAuthenticationSuccessHandler(successHandler);
         setAuthenticationFailureHandler(failureHandler);
-        setAuthenticationManager(authenticationManager);
     }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
-        parseJsonBody(request);
-        return super.attemptAuthentication(request, response);
-    }
-
-    @Override
-    protected String obtainPassword(HttpServletRequest request) {
-        return password;
-    }
-
-    @Override
-    protected String obtainUsername(HttpServletRequest request) {
-        return username;
-    }
-
-    private void parseJsonBody(HttpServletRequest request) {
-        try {
-            BufferedReader reader = request.getReader();
-            StringBuilder body = new StringBuilder();
-            String line = reader.readLine();
-            while (line != null) {
-                body.append(line);
-                line = reader.readLine();
-            }
-            CredentialsDto credentials = objectMapper.readValue(body.toString(), CredentialsDto.class);
-            username = credentials.username();
-            password = credentials.password();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (!request.getMethod().equals("POST")) {
+            throw new AuthenticationServiceException("Authentication method not supported: " + request.getMethod());
+        } else {
+            UsernamePasswordAuthenticationToken authRequest = jsonAuthenticationConverter.convert(request);
+            this.setDetails(request, authRequest);
+            return this.getAuthenticationManager().authenticate(authRequest);
         }
     }
 }
