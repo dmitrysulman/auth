@@ -22,7 +22,6 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 @EnableWebSecurity
 public class SecurityConfig {
-
     private final AuthenticationSuccessHandler authenticationSuccessHandler;
     private final AuthenticationFailureHandler authenticationFailureHandler;
     private final ObjectMapper objectMapper;
@@ -42,8 +41,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         JsonUsernamePasswordAuthenticationFilter jsonUsernamePasswordAuthenticationFilter =
-                new JsonUsernamePasswordAuthenticationFilter(
-                        "/auth",
+                new JsonUsernamePasswordAuthenticationFilter("/auth",
                         authenticationSuccessHandler,
                         authenticationFailureHandler,
                         objectMapper);

@@ -17,7 +17,6 @@ import java.util.Date;
 
 @Service
 public class JwtService {
-
     private final JWKSource<SecurityContext> jwkSource;
 
     @Autowired

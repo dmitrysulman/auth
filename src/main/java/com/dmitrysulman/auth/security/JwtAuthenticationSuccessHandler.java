@@ -17,7 +17,6 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
-
     private final JwtService jwtService;
     private final ObjectMapper objectMapper;
 
